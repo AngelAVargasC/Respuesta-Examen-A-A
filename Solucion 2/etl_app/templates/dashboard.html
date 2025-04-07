@@ -1,0 +1,343 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Respaldo de Batería</title>
+  <!-- Incluir ApexCharts -->
+   
+  <script src="{% static 'js/apexcharts.js' %}"></script> 
+  <style>
+    /* Reset global */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2c3e50);
+      /* background-image: url('/static/images/fondo_bosque.jpg'); */
+      
+      background-size: cover;
+      color: #fff;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; height: 70px;
+      background: rgb(0, 0, 0); display: flex; align-items: center;
+      padding: 0 30px; z-index: 1000; /* box-shadow: 0 2px 5px rgba(0,0,0,0.4); */
+    }
+    .navbar img { height: 50px; margin-right: 15px; }
+    .navbar h1 { font-size: 1.8rem; color: #fff; letter-spacing: 1px; }
+    .container {
+      display: flex; margin-top: 0px; height: 100% !important;
+    }
+    .sidebar {
+      width: 150px; background: rgba(0, 0, 0, 0.828); padding: 25px;
+      border-right: 1px solid rgba(255, 255, 255, 0); transition: background 0.3s ease;
+    }
+    /* .sidebar:hover { background: rgba(0,0,0,0.4); } */
+    .sidebar h2 {
+      font-size: 1.4rem; color: #fff; margin-bottom: 20px;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .sidebar a {
+      display: block; width: 100%; padding: 12px 15px;
+      margin-bottom: 20px; font-size: 16px; text-decoration: none;
+      background: #ffffff; color: #000000; text-align: center;
+      border-radius: 6px; transition: background 0.3s ease;
+    }
+    .sidebar a:hover { background: #2980b9; }
+    .content {
+      flex: 1; padding: 30px; overflow-y: hidden;
+        gap: 10px;
+        height: 100vh !important;
+    }
+
+    .content h1 {
+      font-size: 2rem; margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    .chart-container {
+      background: #1f2b3a42;
+      border-radius: 8px; padding: 20px; margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4); position: relative;
+      width: 100% !important;  /* Mantener ancho al 100% */
+      height: 85%;
+      transition: all 1s ease;
+    }
+    .chart-container:hover{
+      background: #000000db;
+
+    }
+    .chart {
+      width: 100%; /* Mantener ancho al 100% */
+    }
+      /* Filtro dentro del contenedor de la gráfica */
+      .chart-filter {
+      position: absolute;
+      top: 15px;
+      right: 100px;
+      z-index: 10;
+      width: 150px;
+      border-bottom: 2px solid #ffffff;
+    }
+    .chart-filter select {
+      padding: 8px 12px;
+      font-size: 20px;
+      border: none;
+      border-radius: 4px;
+      background: #ffffff00;
+      color: #ffffff;
+      /* appearance: none; */
+      /* -webkit-appearance: none; */
+      /* -moz-appearance: none; */
+      cursor: pointer;
+      font-weight: bold;
+      /* box-shadow: 0 1px 3px rgba(0,0,0,0.2); */
+    }
+    /* Para mantener el contraste cuando se despliega */
+    .chart-filter select option {
+      background-color: #1f2b3a; /* Mismo fondo oscuro */
+      color: #ffffff;
+      padding: 10px;
+    }
+       /* Cambia el color de fondo del menú */
+    .apexcharts-menu {
+      background-color: #000000 !important; /* Fondo negro */
+    }
+
+    /* Cambia el color del texto o íconos del menú */
+    .apexcharts-menu-item {
+      color: #ffffff !important;  /* Texto blanco */
+    }
+
+    /* Opcional: efecto hover para los elementos del menú */
+    .apexcharts-menu-item:hover {
+      background-color: #333333 !important;
+    }
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -100;
+      object-fit: cover !important;
+      opacity: 1; /* puedes ajustar la opacidad para mayor legibilidad */
+    }
+    @media screen and (max-width: 768px) {
+      .container {
+    flex-direction: column;
+  }
+
+    .sidebar {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center ;
+      width: 100%;
+      height: 30px;
+      border-right: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      margin: 0px;
+      padding: 0px;
+      padding-top: 0px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr !important;
+      padding: 10px;
+      height: 100vh !important;
+    }
+
+    .top_alarms,
+    .alarmsxreg {
+      grid-column: span 1;
+    }
+
+    .chart-container {
+      margin-bottom: 30px;
+      height: 500px;
+    }
+
+    .navbar h1 {
+      font-size: 1vmax;
+    }
+
+    .sidebar h2 {
+      font-size: 1vmax;
+      color: #ffffff00;
+    }
+    .sidebar a {
+      display: flex; width: 50px; padding: 5px 5px;
+      margin-bottom: 0px; font-size: 1vmax; text-decoration: none;
+      background: #ffffff; color: #000000; text-align: center;
+      border-radius: 6px; transition: background 0.3s ease;
+      justify-content: center;
+      align-items: center;
+    }
+    .chart-filter {
+      position: absolute;
+      top: 50px;
+      right: 40px;
+      z-index: 10;
+      width: 150px;
+      border-bottom: 2px solid #ffffff;
+    }
+  }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="{% static 'videos/bosque3.2.mp4' %}" type="video/mp4">
+    Tu navegador no soporta videos en HTML5.
+  </video>
+  <!-- Navbar flotante -->
+  <div class="navbar">
+    
+    <div styles=" display:flex; flex-direction:row; align-items:center; justify-content:center;"><h1 style="font-size: 2.1vmax; display: flex; color: #fff;  align-items: center; justify-content: center;"><img src="{% static 'images/origen_nf.png' %}" alt="AT&T Logo">AT&T</h1></div>
+    <h1 style="font-size: 1.5vmax; color: #48aef2;">Respaldo De Baterias</h1>
+  </div>
+
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>MENÚ</h2>
+      <a href="{% url 'dashboard-mas' %}">Ver más</a>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="content">
+      <!-- <h1 style="color: #171717;">Tiempo Promedio de Respaldo (minutos)</h1> -->
+      <div class="chart-container">
+        <!-- Filtro específico para la gráfica, por si se requiere un filtro adicional -->
+        <div class="chart-filter">
+          <select id="chartFilter">
+            <option value="Todos">Todos</option>
+            {% for label in labels %}
+              <option value="{{ label }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="chart" class="chart"></div>
+  
+      </div>
+      <h2 style="text-align: center; color: #fff;"> Nota: Priorizar el reemplazo de baterías con menor tiempo de respaldo.</h2>
+    </div>
+  </div>
+
+  <script>
+    var allLabels = {{ labels|safe }};
+    var allValues = {{ values|safe }};
+  
+    function buildSeries(labels, values) {
+      return labels.map((label, i) => ({ x: label, y: values[i] || 0 }));
+    }
+  
+    var options = {
+      chart: {
+        type: 'bar',
+        height: '100%',
+        toolbar: { show: true },
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 800,
+          animateGradually: { enabled: true, delay: 150 },
+          dynamicAnimation: { enabled: true, speed: 350 }
+        },
+        foreColor: '#fff' // todos los textos dentro del chart
+      },
+      grid: {
+        show: false // 👈 Esto oculta todas las líneas de la gráfica
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: '60%',
+          endingShape: 'rounded',
+          borderRadius: 20,
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function (val) {
+            return val.toFixed(0); // ← sin decimales
+        },
+        style: { colors: ['#000'], fontSize: '14px' }
+        },
+      tooltip: {
+        theme: 'dark',
+        style: {
+          fontSize: '14px',
+          color: '#000'
+        },
+        x: {
+          formatter: function(val) {
+            return 'Sitio: ' + val;
+          }
+        },
+        y: {
+          formatter: function(val) {
+            return val.toFixed(2) + " min";
+          }
+        }
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          type: "vertical",
+          gradientToColors: ['#00bcd4'],
+          stops: [0, 100]
+        }
+      },
+      title: {
+        text: 'Tiempo de Respaldo de Batería',
+        align: 'center',
+        margin: 20,
+        style: {
+          padding:'20px', 
+          fontSize: '14px',
+          color: '#fff'
+        }
+      },
+      xaxis: {
+        type: 'category',
+        labels: {
+          style: { colors: '#fff', fontSize: '1vmax' }
+        }
+      },
+      yaxis: {
+        labels: {
+          style: { colors: '#fff', fontSize: '13px' },
+          formatter: val => val.toFixed(2)
+        }
+      },
+      series: [{
+        name: 'Backup (min)',
+        data: buildSeries(allLabels, allValues)
+      }]
+    };
+  
+    var chart = new ApexCharts(document.querySelector("#chart"), options);
+    chart.render();
+  
+    // Filtro por sitio
+    document.getElementById('chartFilter').addEventListener('change', function() {
+      const selected = this.value;
+      if (selected === "Todos") {
+        chart.updateSeries([{ name: 'Backup (min)', data: buildSeries(allLabels, allValues) }]);
+      } else {
+        const index = allLabels.indexOf(selected);
+        if (index !== -1) {
+          chart.updateSeries([{ name: 'Backup (min)', data: buildSeries([allLabels[index]], [allValues[index]]) }]);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

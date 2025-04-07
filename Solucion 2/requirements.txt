@@ -1,0 +1,9 @@
+Django
+gunicorn
+pandas
+openpyxl
+matplotlib
+pywin32
+# celery 
+# django-celery-beat
+django-crontab
